@@ -1,0 +1,22 @@
+{
+  "name": "famapp-verify-client",
+  "version": "1.0.0",
+  "description": "Zero-dependency lightweight client SDK for FamApp UPI payment verification",
+  "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "famapp",
+    "fampay",
+    "upi",
+    "verification",
+    "payment",
+    "sdk"
+  ],
+  "author": "",
+  "license": "MIT"
+}

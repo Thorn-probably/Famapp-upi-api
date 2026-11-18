@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fampay-worker"
+version = "0.1.0"
+description = "Lightweight Python SDK for FamApp UPI payment verification via Cloudflare Worker"
+readme = "README.md"
+authors = [{ name = "FamApp UPI Engine" }]
+license = { text = "MIT" }
+dependencies = [
+    "httpx>=0.23.0"
+]
+requires-python = ">=3.8"
+keywords = ["fampay", "famapp", "upi", "verification", "payments"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.20.0"
+]

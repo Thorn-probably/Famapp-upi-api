@@ -1,0 +1,14 @@
+name = "famapp-upi-verification"
+main = "src/index.js"
+compatibility_date = "2024-04-01"
+
+# KV Namespace binding for anti-replay and claimed transactions
+[[kv_namespaces]]
+binding = "PAYMENTS_KV"
+id = "YOUR_KV_NAMESPACE_ID"
+preview_id = "YOUR_KV_PREVIEW_ID"
+
+[vars]
+# Optional default environment variables (Override or set secrets via wrangler secret put)
+# ALLOWED_ORIGIN = "*"
+# OUTGOING_WEBHOOK_URL = "https://your-server.com/webhook"

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FamApp UPI Verification - Test Playground</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fam-gradient { background: linear-gradient(135deg, #FF6B00 0%, #FFA800 100%); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen py-10 px-4">
+  <div class="max-w-3xl mx-auto space-y-8">
+    
+    <!-- Header -->
+    <div class="text-center space-y-2">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-semibold tracking-wide uppercase">
+        ⚡ Live Test Playground
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white">FamApp UPI Verification</h1>
+      <p class="text-slate-400 text-sm">Test your Cloudflare Worker verification engine with zero setup.</p>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- Card 1: Payment Details & UPI QR -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
+        <div>
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+            <h2 class="font-semibold text-lg text-white">1. Send Payment</h2>
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium">FamApp Active</span>
+          </div>
+
+          <p class="text-xs text-slate-400 mb-4">Scan QR or send test UPI payment to your FamPay VPA:</p>
+
+          <!-- VPA Box -->
+          <div class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl p-3 mb-5">
+            <div>
+              <div class="text-[11px] text-slate-500 uppercase font-semibold">UPI ID / VPA</div>
+              <div class="font-mono text-orange-400 font-bold" id="vpaText">yourname@fam</div>
+            </div>
+            <button onclick="copyVPA()" id="copyBtn" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition">
+              Copy
+            </button>
+          </div>
+
+          <!-- QR Code Preview -->
+          <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-inner">
+            <img id="qrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi%3A%2F%2Fpay%3Fpa%3Dyourname%40fam%26pn%3DFamPay%26cu%3DINR" alt="UPI QR" class="w-40 h-40">
+            <span class="text-slate-800 text-[11px] font-semibold mt-2">Scan with PhonePe / GPay / Paytm / FamPay</span>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-slate-800 text-[11px] text-slate-500 text-center">
+          Make any payment (e.g. ₹1 or ₹10), then copy the 12-digit UTR from your bank or app.
+        </div>
+      </div>
+
+      <!-- Card 2: Worker Verification Form -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+            <h2 class="font-semibold text-lg text-white">2. Verify UTR</h2>
+            <span class="text-xs text-slate-400 font-mono">POST /verify</span>
+          </div>
+
+          <form id="verifyForm" class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Cloudflare Worker URL</label>
+              <input type="url" id="workerUrl" required placeholder="https://your-worker.workers.dev" 
+                class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 font-mono">
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Worker API Key</label>
+              <input type="password" id="apiKey" placeholder="Leave empty if not set" 
+                class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 font-mono">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Expected Amount (₹)</label>
+                <input type="number" step="0.01" id="expectedAmount" value="1.00" required 
+                  class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Order ID</label>
+                <input type="text" id="orderId" value="TEST_ORD_001" 
+                  class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 font-mono">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">12-Digit UPI UTR</label>
+              <input type="text" id="utr" required maxlength="12" pattern="\d{12}" placeholder="e.g. 432109876543" 
+                class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-base text-orange-400 font-mono tracking-wider font-semibold focus:outline-none focus:border-orange-500">
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full fam-gradient text-black font-bold py-2.5 rounded-xl hover:opacity-95 transition shadow-lg shadow-orange-500/20 active:scale-[0.99] flex items-center justify-center gap-2">
+              <span id="btnText">Verify Payment</span>
+              <svg id="spinner" class="hidden animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        <div id="statusNotice" class="mt-4 text-center text-xs text-slate-400 min-h-[20px]">
+          Ready to verify
+        </div>
+      </div>
+    </div>
+
+    <!-- Result Box -->
+    <div id="resultCard" class="hidden bg-slate-900 border rounded-2xl p-6 shadow-2xl transition-all">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <div class="flex items-center gap-2">
+          <span id="statusBadge" class="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider"></span>
+          <span class="text-sm font-semibold text-white" id="statusTitle"></span>
+        </div>
+        <span class="text-xs text-slate-500 font-mono" id="responseTime"></span>
+      </div>
+
+      <div id="successDetails" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+          <div class="text-[11px] text-slate-500">Amount</div>
+          <div class="text-base font-bold text-emerald-400" id="resAmount">-</div>
+        </div>
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+          <div class="text-[11px] text-slate-500">Sender</div>
+          <div class="text-sm font-semibold text-white truncate" id="resSender">-</div>
+        </div>
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+          <div class="text-[11px] text-slate-500">Txn ID</div>
+          <div class="text-xs font-mono text-slate-300 truncate" id="resTxnId">-</div>
+        </div>
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+          <div class="text-[11px] text-slate-500">UTR</div>
+          <div class="text-xs font-mono text-orange-400 font-semibold" id="resUtr">-</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="text-xs font-semibold text-slate-400 mb-1">Raw API Response</div>
+        <pre id="rawResponse" class="bg-slate-950 p-3 rounded-xl text-xs font-mono text-slate-300 overflow-x-auto max-h-48 border border-slate-800"></pre>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Load cached credentials from localStorage
+    const savedWorkerUrl = localStorage.getItem("famapp_worker_url");
+    const savedApiKey = localStorage.getItem("famapp_api_key");
+    if (savedWorkerUrl) document.getElementById("workerUrl").value = savedWorkerUrl;
+    if (savedApiKey) document.getElementById("apiKey").value = savedApiKey;
+
+    // Update QR Code dynamically when amount changes
+    const expectedAmountInput = document.getElementById("expectedAmount");
+    function updateQr() {
+      const amt = parseFloat(expectedAmountInput.value) || 1;
+      const upiUrl = `upi://pay?pa=yourname@fam&pn=FamPay&am=${amt.toFixed(2)}&cu=INR`;
+      document.getElementById("qrImage").src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUrl)}`;
+    }
+    expectedAmountInput.addEventListener("input", updateQr);
+
+    function copyVPA() {
+      navigator.clipboard.writeText("yourname@fam");
+      const btn = document.getElementById("copyBtn");
+      btn.textContent = "Copied!";
+      setTimeout(() => btn.textContent = "Copy", 1500);
+    }
+
+    const form = document.getElementById("verifyForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const btnText = document.getElementById("btnText");
+    const spinner = document.getElementById("spinner");
+    const statusNotice = document.getElementById("statusNotice");
+    const resultCard = document.getElementById("resultCard");
+    const statusBadge = document.getElementById("statusBadge");
+    const statusTitle = document.getElementById("statusTitle");
+    const responseTime = document.getElementById("responseTime");
+    const successDetails = document.getElementById("successDetails");
+    const rawResponse = document.getElementById("rawResponse");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const workerUrl = document.getElementById("workerUrl").value.replace(/\/+$/, "");
+      const apiKey = document.getElementById("apiKey").value.trim();
+      const utr = document.getElementById("utr").value.trim();
+      const expectedAmount = parseFloat(document.getElementById("expectedAmount").value);
+      const orderId = document.getElementById("orderId").value.trim();
+
+      // Persist to localStorage
+      localStorage.setItem("famapp_worker_url", workerUrl);
+      localStorage.setItem("famapp_api_key", apiKey);
+
+      submitBtn.disabled = true;
+      spinner.classList.remove("hidden");
+      btnText.textContent = "Checking...";
+      resultCard.classList.add("hidden");
+
+      const maxRetries = 4;
+      const retryDelayMs = 3000;
+      let attempt = 0;
+      const startTime = Date.now();
+
+      const headers = { "Content-Type": "application/json" };
+      if (apiKey) headers["X-API-Key"] = apiKey;
+
+      const payload = {
+        utr,
+        expected_amount: expectedAmount,
+        order_id: orderId,
+        mark_as_read: true
+      };
+
+      while (true) {
+        attempt++;
+        statusNotice.textContent = `Querying Gmail... (Attempt ${attempt}/${maxRetries})`;
+
+        try {
+          const resp = await fetch(`${workerUrl}/verify`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(payload)
+          });
+
+          const data = await resp.json();
+          const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+
+          // If verified
+          if (resp.status === 200 && data.success) {
+            displayResult(true, "VERIFIED", "Payment Successfully Verified!", data, elapsed);
+            break;
+          }
+
+          // If already claimed
+          if (data.status === "ALREADY_CLAIMED") {
+            displayResult(false, "ALREADY_CLAIMED", "UTR Already Claimed!", data, elapsed);
+            break;
+          }
+
+          // If pending and we have retries left
+          if (data.status === "PENDING" && attempt < maxRetries) {
+            statusNotice.textContent = `Email not arrived yet, waiting ${retryDelayMs/1000}s... (Attempt ${attempt}/${maxRetries})`;
+            await new Promise(r => setTimeout(r, retryDelayMs));
+            continue;
+          }
+
+          // Other failure or attempts exhausted
+          displayResult(false, data.status || "FAILED", data.message || "Verification Failed", data, elapsed);
+          break;
+
+        } catch (err) {
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, retryDelayMs));
+            continue;
+          }
+          const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+          displayResult(false, "NETWORK_ERROR", err.message, { error: err.message }, elapsed);
+          break;
+        }
+      }
+
+      submitBtn.disabled = false;
+      spinner.classList.add("hidden");
+      btnText.textContent = "Verify Payment";
+      statusNotice.textContent = "Verification completed.";
+    });
+
+    function displayResult(isSuccess, badgeText, titleText, data, elapsed) {
+      resultCard.classList.remove("hidden");
+      responseTime.textContent = `${elapsed}s`;
+      statusTitle.textContent = titleText;
+      statusBadge.textContent = badgeText;
+      rawResponse.textContent = JSON.stringify(data, null, 2);
+
+      if (isSuccess) {
+        resultCard.className = "bg-slate-900 border border-emerald-500/40 rounded-2xl p-6 shadow-2xl transition-all";
+        statusBadge.className = "text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        successDetails.classList.remove("hidden");
+        document.getElementById("resAmount").textContent = "₹" + data.amount;
+        document.getElementById("resSender").textContent = data.sender || "N/A";
+        document.getElementById("resTxnId").textContent = data.txn_id || "N/A";
+        document.getElementById("resUtr").textContent = data.utr || "N/A";
+      } else {
+        resultCard.className = "bg-slate-900 border border-rose-500/40 rounded-2xl p-6 shadow-2xl transition-all";
+        statusBadge.className = "text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/30";
+        successDetails.classList.add("hidden");
+      }
+    }
+  </script>
+</body>
+</html>
